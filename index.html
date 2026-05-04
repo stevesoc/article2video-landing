@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Article2Video — Turn Every Article Into a YouTube Video, Automatically</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --surface: #f5f5fb;
+      --card: #ffffff;
+      --border: #e2e2ef;
+      --purple: #6d28d9;
+      --purple-light: #7c3aed;
+      --purple-glow: rgba(109,40,217,0.15);
+      --green: #16a34a;
+      --text: #1e1e2e;
+      --muted: #5a5a7a;
+      --white: #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 1.2rem; font-weight: 700; color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--purple-light); }
+    .nav-cta {
+      background: var(--purple);
+      color: white; font-weight: 600; font-size: 0.9rem;
+      padding: 10px 20px; border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--purple-light); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(109,40,217,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.4);
+      color: var(--purple-light);
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 6px 16px; border-radius: 100px;
+      margin-bottom: 28px;
+    }
+    .badge::before { content: '⚡'; }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+      max-width: 780px;
+      margin-bottom: 12px;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+    .hero-cta-group {
+      display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;
+      margin-bottom: 48px;
+    }
+    .btn-primary {
+      background: var(--purple);
+      color: white; font-weight: 700; font-size: 1rem;
+      padding: 16px 32px; border-radius: 10px;
+      text-decoration: none; display: inline-block;
+      box-shadow: 0 0 32px var(--purple-glow);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--purple-light); transform: translateY(-2px); }
+    .btn-secondary {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text); font-weight: 600; font-size: 1rem;
+      padding: 16px 32px; border-radius: 10px;
+      text-decoration: none; display: inline-block;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--purple); color: var(--purple); background: rgba(109,40,217,0.05); }
+    .hero-checks {
+      display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
+      font-size: 0.9rem; color: var(--muted);
+    }
+    .hero-checks span::before { content: '✅ '; }
+
+    /* PROBLEM */
+    .section { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--purple-light);
+      margin-bottom: 16px;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800; letter-spacing: -1px;
+      color: var(--text); line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin-top: 48px;
+    }
+    @media (max-width: 640px) { .problem-grid { grid-template-columns: 1fr; } }
+    .problem-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px;
+    }
+    .problem-card h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 10px; }
+    .problem-card p { color: var(--muted); font-size: 0.95rem; }
+    .problem-card .icon { font-size: 1.8rem; margin-bottom: 14px; }
+
+    /* SOLUTION */
+    .solution-wrap {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .solution-inner {
+      max-width: 1100px; margin: 0 auto; padding: 100px 24px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    @media (max-width: 768px) { .solution-inner { grid-template-columns: 1fr; } }
+    .solution-text p { color: var(--muted); font-size: 1.05rem; margin-bottom: 28px; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .feature-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      color: var(--text); font-size: 0.95rem;
+    }
+    .feature-list li .check {
+      background: rgba(34,197,94,0.15);
+      border-radius: 50%; width: 22px; height: 22px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--green); margin-top: 1px;
+    }
+    .terminal {
+      background: #1e1e2e;
+      border: 1px solid #2a2a3d;
+      border-radius: 14px; padding: 24px;
+      font-family: 'Courier New', monospace; font-size: 0.85rem;
+    }
+    .terminal .t-bar {
+      display: flex; gap: 6px; margin-bottom: 18px;
+    }
+    .terminal .t-bar span {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .terminal .t-bar span:nth-child(1) { background: #ff5f57; }
+    .terminal .t-bar span:nth-child(2) { background: #febc2e; }
+    .terminal .t-bar span:nth-child(3) { background: #28c840; }
+    .t-line { margin: 6px 0; }
+    .t-green { color: #4ade80; }
+    .t-purple { color: #a78bfa; }
+    .t-muted { color: #555; }
+    .t-white { color: #e8e8f0; }
+
+    /* HOW IT WORKS */
+    .steps { display: flex; flex-direction: column; gap: 0; margin-top: 56px; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; left: 27px; top: 0; bottom: 0; width: 2px;
+      background: linear-gradient(to bottom, var(--purple), transparent);
+    }
+    .step {
+      display: flex; gap: 24px; align-items: flex-start;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      background: var(--purple);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem; color: white;
+      position: relative; z-index: 1;
+      box-shadow: 0 0 20px var(--purple-glow);
+    }
+    .step-content h3 { color: var(--text); font-size: 1.1rem; margin-bottom: 6px; }
+    .step-content p { color: var(--muted); font-size: 0.95rem; }
+
+    /* TESTIMONIALS */
+    .testimonials-wrap {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+      margin-top: 48px;
+    }
+    @media (max-width: 768px) { .testimonials-grid { grid-template-columns: 1fr; } }
+    .testimonial {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px;
+    }
+    .stars { color: #fbbf24; font-size: 0.9rem; margin-bottom: 14px; }
+    .testimonial blockquote {
+      font-size: 1rem; color: var(--text);
+      line-height: 1.6; margin-bottom: 20px;
+      font-style: italic;
+    }
+    .testimonial cite {
+      font-size: 0.85rem; color: var(--muted); font-style: normal; font-weight: 600;
+    }
+
+    /* PRICING */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px; margin-top: 48px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .price-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+      display: flex; flex-direction: column; gap: 20px;
+      transition: transform 0.2s;
+    }
+    .price-card:hover { transform: translateY(-4px); }
+    .price-card.featured {
+      border-color: var(--purple);
+      background: linear-gradient(135deg, #f3eeff, #ede9fe);
+      box-shadow: 0 0 40px var(--purple-glow);
+      position: relative;
+    }
+    .featured-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--purple);
+      color: white; font-size: 0.72rem; font-weight: 700;
+      padding: 4px 14px; border-radius: 100px; white-space: nowrap;
+    }
+    .plan-name { font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .plan-price { display: flex; align-items: baseline; gap: 4px; }
+    .plan-price .amount { font-size: 2.2rem; font-weight: 800; color: var(--text); }
+    .plan-price .period { font-size: 0.85rem; color: var(--muted); }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .plan-features li {
+      display: flex; gap: 10px; font-size: 0.88rem; color: var(--muted);
+      align-items: flex-start;
+    }
+    .plan-features li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+    .plan-btn {
+      display: block; text-align: center;
+      padding: 13px; border-radius: 9px; font-weight: 700; font-size: 0.9rem;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .plan-btn.outline {
+      border: 1px solid var(--border); color: var(--text);
+    }
+    .plan-btn.outline:hover { border-color: var(--purple); color: var(--purple); background: rgba(109,40,217,0.05); }
+    .plan-btn.solid {
+      background: var(--purple); color: white;
+      box-shadow: 0 0 20px var(--purple-glow);
+    }
+    .plan-btn.solid:hover { background: var(--purple-light); }
+
+    /* CTA BANNER */
+    .cta-banner {
+      background: linear-gradient(135deg, #f3eeff, #ffffff, #f3eeff);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center; padding: 100px 24px;
+    }
+    .cta-banner h2 { margin-bottom: 16px; }
+    .cta-banner p { color: var(--muted); max-width: 500px; margin: 0 auto 36px; }
+    .cta-checklist {
+      display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+      font-size: 0.88rem; color: var(--muted); margin-top: 24px;
+    }
+    .cta-checklist span::before { content: '✅ '; }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--muted); font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; margin: 0 12px; }
+    footer a:hover { color: var(--purple-light); }
+    .footer-logo { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+    .footer-logo span { color: var(--purple-light); }
+
+    /* DIVIDER */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="https://article2video.app/assets/article2video-logo.png" alt="Article2Video" style="height:38px;width:auto;display:block;">
+  </div>
+  <a class="nav-cta" href="#pricing">Start Free Today →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">AEO + Video Automation</div>
+  <h1>Your Articles Are Feeding<br><em>Google's AI.</em><br>It's Time You Got Credit.</h1>
+  <p class="hero-sub">Turn every blog post into a polished YouTube video — automatically. Connect your RSS feed once and watch your channel grow while you sleep.</p>
+  <div class="hero-cta-group">
+    <a class="btn-primary" href="#pricing">Start Free — No Credit Card Required</a>
+    <a class="btn-secondary" href="#how-it-works">See How It Works</a>
+  </div>
+  <div class="hero-checks">
+    <span>RSS + Scrape Fallback</span>
+    <span>ElevenLabs Voiceover</span>
+    <span>YouTube Auto-Publish</span>
+    <span>Zero Editing Required</span>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<div style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="section">
+    <div class="section-label">The Problem</div>
+    <h2>AI search is replacing blue links.<br>Citation visibility is the new SEO.</h2>
+    <p style="color: var(--muted); max-width: 620px; font-size: 1.05rem;">
+      When someone searches in Google, ChatGPT, or Perplexity, the model reads sources and gives an answer — with credit going to whoever shows up in multiple formats. Text alone isn't enough anymore.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="icon">📉</div>
+        <h3>Organic clicks are declining</h3>
+        <p>AI overviews answer questions directly on the results page. Your article gets read by the AI, but the user never clicks through to your site.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">⏱️</div>
+        <h3>Manual video takes hours</h3>
+        <p>One manual video per article can cost 4–6 hours of production time. If you publish multiple articles per week, that's simply unsustainable.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">📺</div>
+        <h3>Video wins citations</h3>
+        <p>Brands showing up in video, text, and audio get cited more often. Multi-format presence is no longer optional — it's the new moat.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🔄</div>
+        <h3>Your content is working for the algorithm</h3>
+        <p>Every article you publish is feeding the model. The question is whether the model feeds traffic back to you — or keeps it for itself.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SOLUTION -->
+<div class="solution-wrap">
+  <div class="solution-inner">
+    <div class="solution-text">
+      <div class="section-label">The Solution</div>
+      <h2>Article2Video turns each article into a polished YouTube video. Automatically.</h2>
+      <p>Connect your RSS feed. Choose a voice. Walk away. New articles are detected, transformed into structured narration, voiced with ElevenLabs, paired with relevant visuals, and published to your YouTube channel — without you touching a timeline.</p>
+      <ul class="feature-list">
+        <li><span class="check">✓</span> <span>RSS automation detects new articles the moment they publish</span></li>
+        <li><span class="check">✓</span> <span>AI rewrites for retention — not just narration of raw text</span></li>
+        <li><span class="check">✓</span> <span>ElevenLabs voices that actually sound human</span></li>
+        <li><span class="check">✓</span> <span>Auto-publish to YouTube with source links for authority signals</span></li>
+        <li><span class="check">✓</span> <span>Zero editing, zero timeline, zero production bottleneck</span></li>
+      </ul>
+    </div>
+    <div class="terminal">
+      <div class="t-bar"><span></span><span></span><span></span></div>
+      <div class="t-line t-muted">// Article2Video pipeline running...</div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line t-green">✓ New article detected via RSS feed</div>
+      <div class="t-line t-muted">  → "10 SEO Trends for 2026"</div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line t-green">✓ AI scripting complete</div>
+      <div class="t-line t-muted">  → Retention-optimized narration</div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line t-green">✓ ElevenLabs voiceover generated</div>
+      <div class="t-line t-muted">  → Voice: Rachel (natural)</div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line t-green">✓ Visuals &amp; captions rendered</div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line t-purple">→ Publishing to YouTube...</div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line t-white">✅ Video live. Source link added.</div>
+      <div class="t-line t-muted">  Time you spent: 0 minutes.</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div id="how-it-works">
+  <div class="section">
+    <div class="section-label">How It Works</div>
+    <h2>Five steps. Five minutes.<br>Then it runs itself.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Connect Your YouTube Channel</h3>
+          <p>Link YouTube once. Future publishing runs without repeated login steps. Your channel is ready to receive automated videos from day one.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Source Your Content</h3>
+          <p>Use RSS automation for true autopilot, paste an article URL on demand, or manually input text from any platform. All three modes are included on every plan.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>The AI Scripts It</h3>
+          <p>Articles are transformed into structured, retention-focused narration — not a flat readout of text. The script is engineered to keep viewers watching.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Visuals, Voiceover &amp; Captions</h3>
+          <p>Relevant visuals are selected, ElevenLabs narration is generated in your chosen voice, and caption tracks are added automatically.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h3>It Goes Live on YouTube</h3>
+          <p>Auto-publish sends the finished video live with source links back to your article — building authority signals and feeding the citation loop back to you.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 32px; display: flex; gap: 32px; flex-wrap: wrap;">
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--purple);">~33</div>
+        <div style="font-size: 0.85rem; color: var(--muted);">credits per 1-min video</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--purple);">0 min</div>
+        <div style="font-size: 0.85rem; color: var(--muted);">average production time</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--purple);">5 min</div>
+        <div style="font-size: 0.85rem; color: var(--muted);">to set up your first project</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div class="testimonials-wrap">
+  <div class="section">
+    <div class="section-label">Social Proof</div>
+    <h2>What publishers said after<br>their first 48 hours</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <blockquote>"I just asked Gemini to rate how beneficial this app could be for my site on a scale of 1-10. It gave it a 9. That alone told me everything I needed to know."</blockquote>
+        <cite>— Scott Bowling</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <blockquote>"This is the missing link. Unbelievable. That rewriter is fire — and the fact that it auto-publishes is a game changer for sure."</blockquote>
+        <cite>— Robert Reuter (Black Belt Bob) &amp; Stan Dunton</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <blockquote>"This is so smart and easy. Well worth it, five times over. I can't believe I was doing this manually before."</blockquote>
+        <cite>— Amy DeHoog &amp; Steve Bailey</cite>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div id="pricing">
+  <div class="section">
+    <div class="section-label">Pricing</div>
+    <h2>Choose how you want to run<br>your content machine</h2>
+    <p style="color: var(--muted); margin-top: -8px; margin-bottom: 0;">Every plan includes RSS automation, article URL input, manual paste input, ElevenLabs voiceover, and YouTube auto-publish.</p>
+    <div class="pricing-grid">
+
+      <div class="price-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price"><span class="amount">$0</span><span class="period">/ forever</span></div>
+        <ul class="plan-features">
+          <li>300 starter credits (one-time)</li>
+          <li>~10 videos to experience the automation</li>
+          <li>1 YouTube channel</li>
+          <li>RSS automation included</li>
+          <li>Upgrade any time</li>
+        </ul>
+        <a href="https://article2video.app/#pricing" class="plan-btn outline">Get Started Free</a>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price"><span class="amount">$19</span><span class="period">/ month</span></div>
+        <ul class="plan-features">
+          <li>500 credits/month</li>
+          <li>~1 video every 2 days</li>
+          <li>1 YouTube channel</li>
+          <li>1 webhook destination</li>
+          <li>Cancel any time</li>
+        </ul>
+        <a href="https://app.paykickstart.com/checkout/pLoegY7nG1OPZWKZV3Ez80qmE35Xb62y" class="plan-btn outline">Start Starter</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="featured-badge">Most Popular</div>
+        <div class="plan-name">Growth</div>
+        <div class="plan-price"><span class="amount">$47</span><span class="period">/ month</span></div>
+        <ul class="plan-features">
+          <li>1,000 credits/month</li>
+          <li>~1 video per day</li>
+          <li>2 YouTube channels</li>
+          <li>4 webhook destinations</li>
+          <li>Built for growing publishers</li>
+        </ul>
+        <a href="https://app.paykickstart.com/checkout/QDBJamy63pGbLk7XgJVjr2o4qVxd9lY0" class="plan-btn solid">Start Growth</a>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><span class="amount">$97</span><span class="period">/ month</span></div>
+        <ul class="plan-features">
+          <li>3,000 credits/month</li>
+          <li>~3–4 videos per day</li>
+          <li>100 YouTube channels</li>
+          <li>100 webhook destinations</li>
+          <li>Built for active publishers</li>
+        </ul>
+        <a href="https://app.paykickstart.com/checkout/6yK2GVrEARPLgzQwDABkl5Yb4oO38Zwp" class="plan-btn outline">Start Pro</a>
+      </div>
+
+    </div>
+    <p style="color: var(--muted); font-size: 0.85rem; margin-top: 24px; text-align: center;">
+      Need it forever? <a href="https://app.paykickstart.com/checkout/evOMAJnpd4EbZW84PenW762KmLw01rR8" style="color: var(--purple-light); text-decoration: none;">Get Lifetime Access for $1,497 →</a>
+    </p>
+  </div>
+</div>
+
+<!-- CTA BANNER -->
+<div class="cta-banner">
+  <h2>Stop manually making videos.<br>Start publishing on autopilot.</h2>
+  <p>Set up your first project in minutes. Watch your first video generate itself. Keep publishing while your competitors are still in the editing timeline.</p>
+  <a class="btn-primary" href="#pricing" style="font-size: 1.1rem; padding: 18px 40px;">Start Building on Autopilot →</a>
+  <div class="cta-checklist">
+    <span>14-day money-back on paid plans</span>
+    <span>Cancel any time</span>
+    <span>No editing skills required</span>
+    <span>YouTube auto-publish on every plan</span>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo" style="display:flex;align-items:center;justify-content:center;">
+    <img src="https://article2video.app/assets/article2video-logo.png" alt="Article2Video" style="height:32px;width:auto;display:block;">
+  </div>
+  <div>
+    <a href="https://article2video.app/#pricing">Start Free</a>
+    <a href="https://article2video.app/auth?mode=login">Log In</a>
+    <a href="https://article2video.app/privacy">Privacy</a>
+    <a href="https://article2video.app/terms">Terms</a>
+    <a href="https://article2video.app/support">Support</a>
+  </div>
+  <p style="margin-top: 16px;">© 2026 Article2Video. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
